@@ -7,8 +7,8 @@ pub struct Function<'a> {
     body: FunctionBody<'a>
 }
 
-impl Function<'_> {
-    pub fn new<'a>(args: usize, body: impl Into<FunctionBody<'a>>) -> Self {
+impl<'a> Function<'a> {
+    pub fn new(args: usize, body: impl Into<FunctionBody<'a>>) -> Self {
         Self {args, body: body.into()}
     }
 
@@ -17,13 +17,13 @@ impl Function<'_> {
     }
 }
 
-enum FunctionBody<'a> {
+pub enum FunctionBody<'a> {
     Normal(Expression<'a>),
     System(SystemFunction),
 }
 
-impl From<Expression<'_>> for FunctionBody<'_> {
-    fn from(expr: Expression<'_>) -> Self {
+impl<'a> From<Expression<'a>> for FunctionBody<'a> {
+    fn from(expr: Expression<'a>) -> Self {
         Self::Normal(expr)
     }
 }
@@ -37,12 +37,23 @@ impl From<SystemFunction> for FunctionBody<'_> {
 type SystemFunction = fn(Vec<Expression>) -> Value;
 type Environment<'a> = HashMap<&'a str, Function<'a>>;
 
-fn default_env<'a>() -> Environment<'a> {
-    let mut env = HashMap::new();
 
-    env.insert("+", Function::new(2, |add| {
-        Value::Num(0) // Temporary
-    }));
-
-    env
+macro_rules! default_env {
+    ($(($n:literal,$a:literal,$func:tt)),*) => {
+        pub fn default_env<'a>() -> Environment<'a> {
+            let mut env = HashMap::new();
+            $(
+                #[allow(unused_parens)]
+                let func: SystemFunction = $func; 
+                env.insert($n, Function::new($a, func))
+            ),*;
+            env
+        }
+    };
 }
+
+default_env! [
+    ("+", 2, (|_| {
+        Value::Num(100)
+    }))
+];
