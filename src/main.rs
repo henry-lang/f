@@ -12,7 +12,7 @@ use parser::parse_expr;
 use tokenizer::tokenize;
 
 fn main() {
-    const CODE: &str = "+ + + 3 4 5 4";
+    const CODE: &str = "+ - 3 4 3";
     let env = env::default_env();
     let tokens = tokenize(CODE).unwrap_or_else(|err| err.log_and_exit(CODE));
     let expr = parse_expr(&mut tokens.iter(), &vec![], &env)

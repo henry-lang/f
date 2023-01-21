@@ -41,12 +41,12 @@ type Environment<'a> = HashMap<&'a str, Function<'a>>;
 macro_rules! default_env {
     ($(($n:literal,$a:literal,$func:tt)),*) => {
         pub fn default_env<'a>() -> Environment<'a> {
-            let mut env = HashMap::new();
+            let mut env = Environment::new();
             $(
                 #[allow(unused_parens)]
                 let func: SystemFunction = $func; 
-                env.insert($n, Function::new($a, func))
-            ),*;
+                env.insert($n, Function::new($a, func));
+            )*
             env
         }
     };
@@ -55,5 +55,8 @@ macro_rules! default_env {
 default_env! [
     ("+", 2, (|_| {
         Value::Num(100)
+    })),
+    ("-", 2, (|_| {
+        Value::Num(50)
     }))
 ];
