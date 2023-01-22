@@ -18,5 +18,5 @@ fn main() {
     let expr =
         parse_expr(&mut tokens.iter(), &vec![], &env).unwrap_or_else(|err| err.log_and_exit(CODE));
 
-    println!("{:?}", expr,);
+    println!("{:?}", expr);
 }
