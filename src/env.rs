@@ -1,15 +1,18 @@
 use std::collections::HashMap;
 
-use crate::{parser::Expression, interpreter::Value};
+use crate::{interpreter::Value, parser::Expression};
 
 pub struct Function<'a> {
     args: usize,
-    body: FunctionBody<'a>
+    body: FunctionBody<'a>,
 }
 
 impl<'a> Function<'a> {
     pub fn new(args: usize, body: impl Into<FunctionBody<'a>>) -> Self {
-        Self {args, body: body.into()}
+        Self {
+            args,
+            body: body.into(),
+        }
     }
 
     pub fn args(&self) -> usize {
@@ -34,9 +37,8 @@ impl From<SystemFunction> for FunctionBody<'_> {
     }
 }
 
-type SystemFunction = fn(Vec<Expression>) -> Value;
-type Environment<'a> = HashMap<&'a str, Function<'a>>;
-
+pub type SystemFunction = fn(Vec<Expression>) -> Value;
+pub type Environment<'a> = HashMap<&'a str, Function<'a>>;
 
 macro_rules! default_env {
     ($(($n:literal,$a:literal,$func:tt)),*) => {
@@ -44,7 +46,7 @@ macro_rules! default_env {
             let mut env = Environment::new();
             $(
                 #[allow(unused_parens)]
-                let func: SystemFunction = $func; 
+                let func: SystemFunction = $func;
                 env.insert($n, Function::new($a, func));
             )*
             env
@@ -52,11 +54,7 @@ macro_rules! default_env {
     };
 }
 
-default_env! [
-    ("+", 2, (|_| {
-        Value::Num(100)
-    })),
-    ("-", 2, (|_| {
-        Value::Num(50)
-    }))
+default_env![
+    ("+", 2, (|_| { Value::Num(100) })),
+    ("-", 2, (|_| { Value::Num(50) }))
 ];

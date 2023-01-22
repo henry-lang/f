@@ -2,8 +2,8 @@
 #![feature(anonymous_lifetime_in_impl_trait)]
 
 mod env;
-mod interpreter;
 mod error;
+mod interpreter;
 mod parser;
 mod span;
 mod tokenizer;
@@ -15,8 +15,8 @@ fn main() {
     const CODE: &str = "+ - 3 4 3";
     let env = env::default_env();
     let tokens = tokenize(CODE).unwrap_or_else(|err| err.log_and_exit(CODE));
-    let expr = parse_expr(&mut tokens.iter(), &vec![], &env)
-        .unwrap_or_else(|err| err.log_and_exit(CODE));
+    let expr =
+        parse_expr(&mut tokens.iter(), &vec![], &env).unwrap_or_else(|err| err.log_and_exit(CODE));
 
     println!("{:?}", expr,);
 }

@@ -3,7 +3,7 @@ use crate::{
     span::{Span, Spanned},
 };
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum Token<'a> {
     Name(&'a str),
     Num(u64), // Only natural number support for now
@@ -11,20 +11,20 @@ pub enum Token<'a> {
 }
 
 impl Token<'_> {
-    pub fn kind(self) -> TokenKind {
+    pub fn kind(&self) -> TokenKind {
         TokenKind::from(self)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TokenKind {
     Name,
     Num,
     Arrow,
 }
 
-impl From<Token<'_>> for TokenKind {
-    fn from(token: Token) -> Self {
+impl From<&Token<'_>> for TokenKind {
+    fn from(token: &Token) -> Self {
         match token {
             Token::Name(_) => Self::Name,
             Token::Num(_) => Self::Num,

@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Value {
-    Num(u64)
+    Num(u64),
 }
