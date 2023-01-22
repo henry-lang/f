@@ -1,10 +1,22 @@
 use std::collections::HashMap;
 
-use crate::{interpreter::Value, parser::Expression, error::{Error, Result}};
+use crate::{
+    error::{Error, Result},
+    interpreter::Value,
+    parser::Expression,
+};
 
 pub struct Function<'a> {
     args: usize,
     body: FunctionBody<'a>,
+}
+
+impl std::fmt::Debug for Function<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Function")
+            .field("args", &self.args)
+            .finish()
+    }
 }
 
 impl<'a> Function<'a> {
@@ -18,11 +30,16 @@ impl<'a> Function<'a> {
     pub fn args(&self) -> usize {
         self.args
     }
+
+    pub fn body(&self) -> &FunctionBody {
+        &self.body
+    }
 }
 
 pub enum FunctionBody<'a> {
     Normal(Expression<'a>),
     System(SystemFunction),
+    LazySystem(LazySystemFunction)
 }
 
 impl<'a> From<Expression<'a>> for FunctionBody<'a> {
@@ -37,7 +54,14 @@ impl From<SystemFunction> for FunctionBody<'_> {
     }
 }
 
-pub type SystemFunction = fn(Vec<Value>) -> Result<Value>;
+impl From<LazySystemFunction> for FunctionBody<'_> {
+    fn from(func: LazySystemFunction) -> Self {
+        Self::LazySystem(func)
+    }
+}
+
+pub type SystemFunction = fn(&[Value]) -> Result<Value>;
+pub type LazySystemFunction = fn(&[Expression], fn(&Expression, &Environment, &Vec<Value>) -> Result<Value>, &Environment, &Vec<Value>) -> Result<Value>;
 pub type Environment<'a> = HashMap<&'a str, Function<'a>>;
 
 macro_rules! extract_args {
@@ -58,28 +82,53 @@ macro_rules! extract_args {
 }
 
 macro_rules! default_env {
-    ($(($n:literal,$a:literal,$func:tt)),+) => {
+    ($(($t:ident,$name:literal,$num_args:literal,$func:tt)),+) => {
         pub fn default_env<'a>() -> Environment<'a> {
             let mut env = Environment::new();
             $(
                 #[allow(unused_parens)]
-                let func: SystemFunction = $func;
-                env.insert($n, Function::new($a, func));
+                let func: $t = $func;
+                env.insert($name, Function::new($num_args, func));
             )+
             env
         }
     };
 }
 
+#[rustfmt::skip]
 default_env![
-    ("+", 2, (|args| {
+    (SystemFunction, "+", 2, (|args| {
         let (lhs, rhs) = extract_args!(args, Num, Num);
 
         Ok(Value::Num(lhs + rhs))
     })),
-    ("-", 2, (|args| {
+    (SystemFunction, "-", 2, (|args| {
         let (lhs, rhs) = extract_args!(args, Num, Num);
 
         Ok(Value::Num(lhs - rhs))
+    })),
+    (SystemFunction, "*", 2, (|args| {
+        let (lhs, rhs) = extract_args!(args, Num, Num);
+
+        Ok(Value::Num(lhs * rhs))
+    })),
+    (SystemFunction, "/", 2, (|args| {
+        let (lhs, rhs) = extract_args!(args, Num, Num);
+
+        Ok(Value::Num(lhs / rhs))
+    })),
+    (LazySystemFunction, "if", 3, (|params, eval, env, args| {
+        let pred = extract_args!(&[eval(&params[0], env, args)?], Bool);
+
+        Ok(if pred.0 {
+            eval(&params[1], env, args)?
+        } else {
+            eval(&params[2], env, args)?
+        })
+    })),
+    (SystemFunction, "=", 2, (|args| {
+        let (lhs, rhs) = extract_args!(args, Num, Num);
+
+        Ok(Value::Bool(lhs == rhs))
     }))
 ];

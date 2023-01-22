@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 ansi_term = "0.12.1"
-lasso = { version = "0.6.0", default-features = false }
+
+[profile.release]
+# lto = true

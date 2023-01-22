@@ -12,18 +12,41 @@ pub enum Expression<'a> {
     App(&'a str, Vec<Expression<'a>>), // Maybe use arena allocator for better cache locality
     Arg(usize),
     Literal(Value),
+    Temp
 }
 
 // A file is basically just a sequence of functions which are loaded into the REPL.
-pub fn parse_file(tokens: &[Spanned<Token>], env: &mut Environment) -> Result<()> {
-    let mut tokens = tokens.iter();
+pub fn parse_file<'a>(tokens: &'a [Spanned<Token>], env: &mut Environment<'a>) -> Result<()> {
+    let mut tokens = tokens.iter().peekable();
 
     while let Some(Spanned { value: token, span }) = tokens.next() {
         let Token::Name(name) = token else {
             Err(Error::Spanned(format!("expected name found {}", token.kind()).into(), *span))?
         };
 
-        
+        let mut args = vec![];
+        while let Some(Spanned {
+            value: Token::Name(name),
+            ..
+        }) = tokens.next_if(|t| t.value.kind() == TokenKind::Name)
+        {
+            args.push(*name);
+        }
+
+        let next = tokens.next();
+        if next.is_none() {
+            return Err(Error::General("expected arrow, found <eof>".into()));
+        } else if next.unwrap().value.kind() != TokenKind::Arrow {
+            return Err(Error::Spanned(
+                format!("expected arrow, found {}", next.unwrap().value.kind()).into(),
+                next.unwrap().span,
+            ));
+        } else {
+            // TODO: make this better
+            env.insert(name, Function::new(args.len(), Expression::Temp));
+            let expr = parse_expr(&mut tokens, &args, &env)?;
+            env.insert(name, Function::new(args.len(), expr));
+        }
     }
 
     Ok(())
@@ -54,7 +77,7 @@ pub fn parse_expr<'a>(
                     Expression::App(name, app_args)
                 } else {
                     Err(Error::Spanned(
-                        format!("cannot find function or local {}", name).into(),
+                        format!("cannot find function or local {name}").into(),
                         *span,
                     ))?
                 }

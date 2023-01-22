@@ -4,6 +4,7 @@ use std::borrow::Cow;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
+#[derive(Debug)]
 pub enum Error {
     General(Cow<'static, str>),
     Spanned(Cow<'static, str>, Span),
@@ -16,7 +17,7 @@ impl Error {
         }
     }
 
-    pub fn log_and_exit(&self, file: &str) -> ! {
+    pub fn log(&self, file: &str) {
         println!("{}: {}", Red.bold().paint("error"), self.message().as_ref());
 
         if let Self::Spanned(_, span) = self {
@@ -25,11 +26,10 @@ impl Error {
                 .chars()
                 .rev()
                 .enumerate()
-                .filter(|(_, c)| *c == '\n')
-                .next()
+                .find(|(_, c)| *c == '\n')
                 .unwrap_or((span.0, '\n'))
                 .0;
-            let padding = (line_num.checked_ilog10().unwrap_or(0) + 4) as usize + offset;
+            let padding = ((((line_num as f64).log10()) as usize) + 4) + offset;
 
             println!(
                 "{} {} {}",
@@ -43,7 +43,10 @@ impl Error {
                 Red.bold().paint("^".repeat(span.len()))
             );
         }
+    }
 
+    pub fn log_and_exit(&self, file: &str) -> ! {
+        self.log(file);
         std::process::exit(1)
     }
 }

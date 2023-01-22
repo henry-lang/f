@@ -62,12 +62,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Spanned<Token>>> {
                 src[i..end]
                     .parse::<u64>()
                     .map(|n| Spanned::new(Token::Num(n), Span(i, end)))
-                    .or_else(|_| {
-                        Err(Error::Spanned(
-                            "invalid number literal".into(),
-                            Span(i, end),
-                        ))
-                    })?
+                    .map_err(|_| Error::Spanned("invalid number literal".into(), Span(i, end)))?
             }
 
             ' ' | '\t' | '\n' | '\r' => continue,
@@ -94,7 +89,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Spanned<Token>>> {
             _ => {
                 let mut end = i + 1;
 
-                while let Some(_) = chars.next_if(|(_, next)| !next.is_whitespace()) {
+                while chars.next_if(|(_, next)| !next.is_whitespace()).is_some() {
                     end += 1;
                 }
 
