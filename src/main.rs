@@ -31,7 +31,7 @@ pub fn repl() -> rustyline::Result<()> {
         interpreter::eval(&ast, env)
     }
 
-    while let Ok(line) = editor.readline(">>") {
+    while let Ok(line) = editor.readline(">> ") {
         let run = run(&line, &env);
         match run {
             Ok(run) => println!("{:?}", run),
@@ -50,7 +50,7 @@ fn main() -> core::result::Result<(), Box<dyn std::error::Error>> {
     } else {
         let file = std::fs::read_to_string(&file_name)
             .map_err(|_| Error::General(format!("could not load file {}", file_name).into()))
-            .unwrap_or_else(|err| err.log_and_exit(file));
+            .unwrap_or_else(|err| err.log_and_exit(""));
     }
 
     Ok(())
