@@ -39,7 +39,7 @@ impl<'a> Function<'a> {
 pub enum FunctionBody<'a> {
     Normal(Expression<'a>),
     System(SystemFunction),
-    LazySystem(LazySystemFunction)
+    LazySystem(LazySystemFunction),
 }
 
 impl<'a> From<Expression<'a>> for FunctionBody<'a> {
@@ -61,7 +61,12 @@ impl From<LazySystemFunction> for FunctionBody<'_> {
 }
 
 pub type SystemFunction = fn(&[Value]) -> Result<Value>;
-pub type LazySystemFunction = fn(&[Expression], fn(&Expression, &Environment, &Vec<Value>) -> Result<Value>, &Environment, &Vec<Value>) -> Result<Value>;
+pub type LazySystemFunction = fn(
+    &[Expression],
+    fn(&Expression, &Environment, &Vec<Value>) -> Result<Value>,
+    &Environment,
+    &Vec<Value>,
+) -> Result<Value>;
 pub type Environment<'a> = HashMap<&'a str, Function<'a>>;
 
 macro_rules! extract_args {

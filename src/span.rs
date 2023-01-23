@@ -10,22 +10,3 @@ impl Span {
         self.1 - self.0
     }
 }
-
-#[derive(Debug, Copy, Clone)]
-pub struct Spanned<T> {
-    pub value: T,
-    pub span: Span,
-}
-
-impl<T> Spanned<T> {
-    pub fn new(value: T, span: Span) -> Self {
-        Self { value, span }
-    }
-
-    pub fn empty(value: T) -> Self {
-        Self {
-            value,
-            span: Span(0, 0),
-        }
-    }
-}

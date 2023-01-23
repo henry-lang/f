@@ -1,16 +1,23 @@
 use crate::{
     error::{Error, Result},
-    span::{Span, Spanned},
+    span::Span,
 };
 
 #[derive(Clone, Debug)]
 pub enum Token<'a> {
-    Name(&'a str),
-    Num(u64), // Only natural number support for now
-    Arrow,
+    Decl(&'a str, Span),
+    Name(&'a str, Span),
+    Num(u64, Span), // Only natural number support for now
+    Arrow(Span),
 }
 
 impl Token<'_> {
+    pub fn span(&self) -> Span {
+        match self {
+            Self::Decl(_, s) | Self::Name(_, s) | Self::Num(_, s) | Self::Arrow(s) => *s,
+        }
+    }
+
     pub fn kind(&self) -> TokenKind {
         TokenKind::from(self)
     }
@@ -18,6 +25,7 @@ impl Token<'_> {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum TokenKind {
+    Decl,
     Name,
     Num,
     Arrow,
@@ -26,9 +34,10 @@ pub enum TokenKind {
 impl From<&Token<'_>> for TokenKind {
     fn from(token: &Token) -> Self {
         match token {
-            Token::Name(_) => Self::Name,
-            Token::Num(_) => Self::Num,
-            Token::Arrow => Self::Arrow,
+            Token::Decl(_, _) => Self::Decl,
+            Token::Name(_, _) => Self::Name,
+            Token::Num(_, _) => Self::Num,
+            Token::Arrow(_) => Self::Arrow,
         }
     }
 }
@@ -39,6 +48,7 @@ impl std::fmt::Display for TokenKind {
             f,
             "{}",
             match self {
+                Self::Decl => "declaration",
                 Self::Name => "name",
                 Self::Num => "string",
                 Self::Arrow => "<arrow>",
@@ -47,7 +57,7 @@ impl std::fmt::Display for TokenKind {
     }
 }
 
-pub fn tokenize(src: &str) -> Result<Vec<Spanned<Token>>> {
+pub fn tokenize(src: &str) -> Result<Vec<Token>> {
     let mut tokens = vec![];
     let mut chars = src.chars().enumerate().peekable();
 
@@ -61,7 +71,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Spanned<Token>>> {
 
                 src[i..end]
                     .parse::<u64>()
-                    .map(|n| Spanned::new(Token::Num(n), Span(i, end)))
+                    .map(|n| Token::Num(n, Span(i, end)))
                     .map_err(|_| Error::Spanned("invalid number literal".into(), Span(i, end)))?
             }
 
@@ -71,11 +81,11 @@ pub fn tokenize(src: &str) -> Result<Vec<Spanned<Token>>> {
                 match chars.peek() {
                     Some((_, '>')) => {
                         let _ = chars.next();
-                        Spanned::new(Token::Arrow, Span(i, i + 2))
+                        Token::Arrow(Span(i, i + 2))
                     }
                     Some((_, ' ' | '\t' | '\n' | '\r')) => {
                         let _ = chars.next();
-                        Spanned::new(Token::Name("-"), Span(i, i + 1))
+                        Token::Name("-", Span(i, i + 1))
                     }
                     _ => panic!(), // Bad but whatever
                 }
@@ -93,7 +103,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Spanned<Token>>> {
                     end += 1;
                 }
 
-                Spanned::new(Token::Name(&src[i..end]), Span(i, end))
+                Token::Name(&src[i..end], Span(i, end))
             }
         });
     }

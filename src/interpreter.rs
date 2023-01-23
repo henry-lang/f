@@ -1,6 +1,6 @@
 use crate::{
     env::{Environment, FunctionBody},
-    error::{Result, Error},
+    error::{Error, Result},
     parser::Expression,
 };
 
@@ -14,21 +14,23 @@ fn eval_(expr: &Expression, env: &Environment, args: &Vec<Value>) -> Result<Valu
     match expr {
         Expression::App(name, params) => {
             let func = env.get(name).unwrap();
-            
-            let eager_eval = || params
-                .iter()
-                .map(|e| eval_(e, env, args))
-                .collect::<Result<Vec<_>>>();
+
+            let eager_eval = || {
+                params
+                    .iter()
+                    .map(|e| eval_(e, env, args))
+                    .collect::<Result<Vec<_>>>()
+            };
 
             match func.body() {
                 FunctionBody::Normal(expr) => eval_(expr, env, &eager_eval()?),
                 FunctionBody::System(func) => func(&eager_eval()?),
-                FunctionBody::LazySystem(func) => func(params, eval_, env, args)
+                FunctionBody::LazySystem(func) => func(params, eval_, env, args),
             }
         }
         Expression::Arg(idx) => Ok(args[*idx].clone()),
         Expression::Literal(value) => Ok(value.clone()),
-        Expression::Temp => Err(Error::General("tried to evaluate temp expr".into()))
+        Expression::Temp => Err(Error::General("tried to evaluate temp expr".into())),
     }
 }
 
