@@ -1,8 +1,8 @@
 mod env;
 mod error;
 mod interpreter;
-mod parser;
 mod span;
+mod parser;
 mod tokenizer;
 
 use error::Error;
@@ -24,6 +24,8 @@ use crate::{
 pub fn repl() -> rustyline::Result<()> {
     let env = env::default_env();
     let mut editor = Editor::<()>::new()?;
+
+    println!("REPL: {} functions loaded", env.len());
 
     fn run(line: &str, env: &Environment) -> Result<Value> {
         let tokens = tokenize(line)?;

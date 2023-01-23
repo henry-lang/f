@@ -1,13 +1,12 @@
-use crate::span::Span;
 use ansi_term::Color::{Blue, Red};
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::Range};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
     General(Cow<'static, str>),
-    Spanned(Cow<'static, str>, Span),
+    Spanned(Cow<'static, str>, Range<usize>),
 }
 
 impl Error {
@@ -21,13 +20,13 @@ impl Error {
         println!("{}: {}", Red.bold().paint("error"), self.message().as_ref());
 
         if let Self::Spanned(_, span) = self {
-            let line_num = file[..span.0].chars().filter(|x| *x == '\n').count();
-            let offset = file[..span.0]
+            let line_num = file[..span.start].chars().filter(|x| *x == '\n').count();
+            let offset = file[..span.start]
                 .chars()
                 .rev()
                 .enumerate()
                 .find(|(_, c)| *c == '\n')
-                .unwrap_or((span.0, '\n'))
+                .unwrap_or((span.start, '\n'))
                 .0;
             let padding = ((((line_num as f64).log10()) as usize) + 4) + offset;
 

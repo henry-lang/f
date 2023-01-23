@@ -57,8 +57,8 @@ pub fn parse_expr<'a>(
             .next()
             .ok_or_else(|| Error::General("expected expression, found <eof>".into()))?
         {
-            &Token::Name(name, span) => {
-                if let Some(idx) = args.iter().position(|&a| a == name) {
+            Token::Name(name, span) => {
+                if let Some(idx) = args.iter().position(|&a| a == *name) {
                     Expression::Arg(idx)
                 } else if let Some(func) = funcs.get(name) {
                     let mut app_args = Vec::with_capacity(func.args());
@@ -70,7 +70,7 @@ pub fn parse_expr<'a>(
                 } else {
                     Err(Error::Spanned(
                         format!("cannot find function or local {name}").into(),
-                        span,
+                        span.clone(),
                     ))?
                 }
             }

@@ -1,6 +1,5 @@
 use crate::{
-    error::{Error, Result},
-    span::Span,
+    error::{Error, Result}, span::Span
 };
 
 #[derive(Clone, Debug)]
@@ -14,7 +13,7 @@ pub enum Token<'a> {
 impl Token<'_> {
     pub fn span(&self) -> Span {
         match self {
-            Self::Decl(_, s) | Self::Name(_, s) | Self::Num(_, s) | Self::Arrow(s) => *s,
+            Self::Decl(_, s) | Self::Name(_, s) | Self::Num(_, s) | Self::Arrow(s) => s.clone(),
         }
     }
 
@@ -71,8 +70,8 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
 
                 src[i..end]
                     .parse::<u64>()
-                    .map(|n| Token::Num(n, Span(i, end)))
-                    .map_err(|_| Error::Spanned("invalid number literal".into(), Span(i, end)))?
+                    .map(|n| Token::Num(n, i..end))
+                    .map_err(|_| Error::Spanned("invalid number literal".into(), i..end))?
             }
 
             ' ' | '\t' | '\n' | '\r' => continue,
@@ -81,11 +80,11 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                 match chars.peek() {
                     Some((_, '>')) => {
                         let _ = chars.next();
-                        Token::Arrow(Span(i, i + 2))
+                        Token::Arrow(i..i + 2)
                     }
                     Some((_, ' ' | '\t' | '\n' | '\r')) => {
                         let _ = chars.next();
-                        Token::Name("-", Span(i, i + 1))
+                        Token::Name("-", i..i + 1)
                     }
                     _ => panic!(), // Bad but whatever
                 }
@@ -103,7 +102,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                     end += 1;
                 }
 
-                Token::Name(&src[i..end], Span(i, end))
+                Token::Name(&src[i..end], i..end)
             }
         });
     }
