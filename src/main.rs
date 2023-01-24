@@ -1,25 +1,19 @@
 mod env;
 mod error;
 mod interpreter;
-mod span;
 mod parser;
+mod span;
 mod tokenizer;
 
 use error::Error;
 use rustyline::Editor;
-use std::{
-    env::args,
-    io::{self, Write},
-};
+use std::env::args;
 
 use parser::parse_expr;
 use tokenizer::tokenize;
 
 use crate::error::Result;
-use crate::{
-    env::Environment,
-    interpreter::{eval, Value},
-};
+use crate::{env::Environment, interpreter::Value};
 
 pub fn repl() -> rustyline::Result<()> {
     let env = env::default_env();
@@ -51,7 +45,7 @@ fn main() -> core::result::Result<(), Box<dyn std::error::Error>> {
         repl()?;
     } else {
         let file = std::fs::read_to_string(&file_name)
-            .map_err(|_| Error::General(format!("could not load file {}", file_name).into()))
+            .map_err(|_| Error::General(format!("could not load file {}", file_name)))
             .unwrap_or_else(|err| err.log_and_exit(""));
     }
 

@@ -1,5 +1,6 @@
 use crate::{
-    error::{Error, Result}, span::Span
+    error::{Error, Result},
+    span::Span,
 };
 
 #[derive(Clone, Debug)]

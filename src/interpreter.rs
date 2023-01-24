@@ -30,7 +30,9 @@ fn eval_(expr: &Expression, env: &Environment, args: &Vec<Value>) -> Result<Valu
         }
         Expression::Arg(idx) => Ok(args[*idx].clone()),
         Expression::Literal(value) => Ok(value.clone()),
-        Expression::Temp => Err(Error::General("tried to evaluate temp expr".into())),
+        Expression::Temp => Err(Error::General(
+            "attemped to evaluate temp expr: this is a BUG".into(),
+        )),
     }
 }
 

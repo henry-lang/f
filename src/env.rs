@@ -79,7 +79,7 @@ macro_rules! extract_args {
         (
             $(
                 if let Value::$variant(x) = $params[next() - 1] { x } else {
-                    return Err(Error::General(format!("wrong argument type for index {}", counter).into()));
+                    return Err(Error::General(format!("wrong argument type for index {}", counter)));
                 },
             )+
         )

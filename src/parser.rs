@@ -19,7 +19,7 @@ pub fn parse_file<'a>(tokens: &'a [Token], env: &mut Environment<'a>) -> Result<
 
     while let Some(token) = tokens.next() {
         let Token::Name(name, _) = token else {
-            Err(Error::Spanned(format!("expected name found {}", token.kind()).into(), token.span()))?
+            Err(Error::Spanned(format!("expected name found {}", token.kind()), token.span()))?
         };
 
         let mut args = vec![];
@@ -33,7 +33,7 @@ pub fn parse_file<'a>(tokens: &'a [Token], env: &mut Environment<'a>) -> Result<
             return Err(Error::General("expected arrow, found <eof>".into()));
         } else if next.unwrap().kind() != TokenKind::Arrow {
             return Err(Error::Spanned(
-                format!("expected arrow, found {}", next.unwrap().kind()).into(),
+                format!("expected arrow, found {}", next.unwrap().kind()),
                 next.unwrap().span(),
             ));
         } else {
@@ -69,7 +69,7 @@ pub fn parse_expr<'a>(
                     Expression::App(name, app_args)
                 } else {
                     Err(Error::Spanned(
-                        format!("cannot find function or local {name}").into(),
+                        format!("cannot find function or local {name}"),
                         span.clone(),
                     ))?
                 }
@@ -77,7 +77,7 @@ pub fn parse_expr<'a>(
 
             Token::Num(num, _) => Expression::Literal(Value::Num(*num)),
             token => Err(Error::Spanned(
-                format!("unexpected token {}", token.kind()).into(),
+                format!("unexpected token {}", token.kind()),
                 token.span(),
             ))?,
         },

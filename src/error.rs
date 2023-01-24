@@ -1,23 +1,24 @@
 use ansi_term::Color::{Blue, Red};
-use std::{borrow::Cow, ops::Range};
+
+use crate::span::Span;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    General(Cow<'static, str>),
-    Spanned(Cow<'static, str>, Range<usize>),
+    General(String),
+    Spanned(String, Span),
 }
 
 impl Error {
-    pub fn message(&self) -> &Cow<'static, str> {
+    pub fn message(&self) -> &String {
         match self {
             Self::General(msg) | Self::Spanned(msg, _) => msg,
         }
     }
 
     pub fn log(&self, file: &str) {
-        println!("{}: {}", Red.bold().paint("error"), self.message().as_ref());
+        println!("{}: {}", Red.bold().paint("error"), self.message());
 
         if let Self::Spanned(_, span) = self {
             let line_num = file[..span.start].chars().filter(|x| *x == '\n').count();
