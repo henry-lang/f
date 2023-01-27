@@ -102,8 +102,12 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                 while chars.next_if(|(_, next)| !next.is_whitespace()).is_some() {
                     end += 1;
                 }
-
-                Token::Name(&src[i..end], i..end)
+                
+                if c == '\\' {
+                    Token::Decl(&src[i + 1..end], i + 1..end)
+                } else {
+                    Token::Name(&src[i..end], i..end)
+                }
             }
         });
     }

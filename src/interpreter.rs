@@ -8,6 +8,7 @@ use crate::{
 pub enum Value {
     Num(u64),
     Bool(bool),
+    Nothing
 }
 
 fn eval_(expr: &Expression, env: &Environment, args: &Vec<Value>) -> Result<Value> {

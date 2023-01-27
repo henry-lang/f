@@ -18,8 +18,8 @@ pub fn parse_file<'a>(tokens: &'a [Token], env: &mut Environment<'a>) -> Result<
     let mut tokens = tokens.iter().peekable();
 
     while let Some(token) = tokens.next() {
-        let Token::Name(name, _) = token else {
-            Err(Error::Spanned(format!("expected name found {}", token.kind()), token.span()))?
+        let Token::Decl(name, _) = token else {
+            Err(Error::Spanned(format!("expected declaration found {}", token.kind()), token.span()))?
         };
 
         let mut args = vec![];
