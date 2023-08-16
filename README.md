@@ -26,7 +26,7 @@ Currently, side effects are a bit weird but you can write a runnable program to 
 main -> print "Hello, world!"
 ```
 
-The print function is impure and returns a `Nothing` type, and there may be an impure keyword added in the future to help document programs. I was thinking a tilde, so a main function would be `~main`
+The print function is impure and returns a `Nothing` type, and there may be an impure keyword added in the future to help document programs. I was thinking a tilde, so a main function would be `~main`.
 
 # Type System
 
