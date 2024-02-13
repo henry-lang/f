@@ -52,8 +52,7 @@ pub fn parse_expr<'a>(
     args: &Vec<&str>,
     funcs: &HashMap<&str, Function>,
 ) -> Result<Expression<'a>> {
-    Ok(
-        match tokens
+        let expr = match tokens
             .next()
             .ok_or_else(|| Error::General("expected expression, found <eof>".into()))?
         {
@@ -80,6 +79,6 @@ pub fn parse_expr<'a>(
                 format!("unexpected token {}", token.kind()),
                 token.span(),
             ))?,
-        },
-    )
+        };
+    Ok(expr)
 }
