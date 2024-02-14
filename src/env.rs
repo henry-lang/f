@@ -103,7 +103,7 @@ macro_rules! default_env {
 #[rustfmt::skip]
 default_env![
     (SystemFunction, "print", 1, (|args| {
-        println!("{:?}", args[0]);
+        println!("{}", args[0]);
         Ok(Value::Nothing)
     })),
     (SystemFunction, "+", 2, (|args| {
@@ -139,5 +139,8 @@ default_env![
         let (lhs, rhs) = extract_args!(args, Num, Num);
 
         Ok(Value::Bool(lhs == rhs))
+    })),
+    (SystemFunction, "none", 0, (|_| {
+        Ok(Value::Nothing)
     }))
 ];

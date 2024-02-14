@@ -1,3 +1,4 @@
+use std::fmt;
 use crate::{
     env::{Environment, FunctionBody},
     error::{Error, Result},
@@ -9,6 +10,17 @@ pub enum Value {
     Num(u64),
     Bool(bool),
     Nothing
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Num(n) => write!(f, "{}", n),
+            Self::Bool(b) => write!(f, "{}", b),
+            Self::Nothing => write!(f, "none")
+        }?;
+        Ok(())
+    }
 }
 
 fn eval_(expr: &Expression, env: &Environment, args: &Vec<Value>) -> Result<Value> {
