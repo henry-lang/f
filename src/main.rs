@@ -51,11 +51,11 @@ fn main() -> core::result::Result<(), Box<dyn std::error::Error>> {
         let tokens = tokenize(&file).unwrap_pretty(&file);
         let mut env = env::default_env();
         parse_file(&tokens, &mut env).unwrap_pretty(&file);
-        dbg!("hello?");
+        
         let main = env.get("main").unwrap_or_else(|| {
             Err(Error::General("no main function found in file".into())).unwrap_pretty(&file)
         });
-        dbg!("hello2?");
+
         match main.body() {
             FunctionBody::Normal(expr) => {
                 interpreter::eval(expr, &env).unwrap_pretty(&file);

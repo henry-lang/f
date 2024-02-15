@@ -7,7 +7,7 @@ use crate::{
 pub enum Token<'a> {
     Decl(&'a str, Span),
     Name(&'a str, Span),
-    String(&'a str, Span),
+    String(String, Span),
     Num(u64, Span), // Only natural number support for now
     Arrow(Span),
 }
@@ -103,7 +103,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
             '\"' => {
                 let mut literal = String::new(); // Temporary string to hold the parsed literal
                 let mut escaped = false;
-                while let Some((_, ch)) = chars.next() {
+                while let Some((i, ch)) = chars.next() {
                     if escaped {
                         match ch {
                             'n' => literal.push('\n'),
@@ -111,6 +111,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                             '\"' => literal.push('\"'),
                             '\\' => literal.push('\\'),
                             _ => {
+                                dbg!(ch);
                                 return Err(Error::Spanned(
                                     "invalid escape sequence".into(),
                                     i..i + 2,
@@ -133,10 +134,10 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                         i..i + 1,
                     ));
                 }
-
+                let len = literal.len();
                 Token::String(
-                    &src[i + 1..i + 1 + literal.len()],
-                    i..i + 2 + literal.len(),
+                    literal,
+                    i..i + 2 + len,
                 )
             }
 
