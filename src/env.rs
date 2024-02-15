@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     error::{Error, Result},
-    interpreter::Value,
+    interpreter::{Value, ValueKind},
     parser::Expression,
 };
 
@@ -107,9 +107,11 @@ default_env![
         Ok(Value::Nothing)
     })),
     (SystemFunction, "+", 2, (|args| {
-        let (lhs, rhs) = extract_args!(args, Num, Num);
-
-        Ok(Value::Num(lhs + rhs))
+        match (&args[0], &args[1]) {
+            (Value::Num(a), Value::Num(b)) => Ok(Value::Num(a + b)),
+            (Value::String(a), Value::String(b)) => Ok(Value::String(a.to_owned() + b)),
+            (a, b) => Err(Error::General(format!("types {} and {} cannot be added together", ValueKind::from(a), ValueKind::from(b))))
+        }
     })),
     (SystemFunction, "-", 2, (|args| {
         let (lhs, rhs) = extract_args!(args, Num, Num);

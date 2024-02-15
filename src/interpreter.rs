@@ -25,6 +25,40 @@ impl fmt::Display for Value {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ValueKind {
+    Num,
+    String,
+    Bool,
+    Nothing
+}
+
+impl From<&Value> for ValueKind {
+    fn from(value: &Value) -> Self {
+        match value {
+            Value::Num(_) => Self::Num,
+            Value::String(_) => Self::String,
+            Value::Bool(_) => Self::Bool,
+            Value::Nothing => Self::Nothing
+        }
+    }
+}
+
+impl std::fmt::Display for ValueKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Num => "num",
+                Self::String => "string",
+                Self::Bool => "bool",
+                Self::Nothing => "none",
+            }
+        )
+    }
+}
+
 fn eval_(expr: &Expression, env: &Environment, args: &Vec<Value>) -> Result<Value> {
     match expr {
         Expression::App(name, params) => {
