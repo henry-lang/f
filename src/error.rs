@@ -44,9 +44,17 @@ impl Error {
             );
         }
     }
+}
 
-    pub fn log_and_exit(&self, file: &str) -> ! {
-        self.log(file);
-        std::process::exit(1)
+pub trait UnwrapPretty<T, Context> {
+    fn unwrap_pretty(self, ctx: Context) -> T;
+}
+
+impl<T> UnwrapPretty<T, &str> for Result<T> {
+    fn unwrap_pretty(self, ctx: &str) -> T {
+        self.unwrap_or_else(|error| {
+            error.log(ctx);
+            std::process::exit(1);
+        })
     }
 }
