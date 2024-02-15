@@ -1,23 +1,25 @@
-use std::fmt;
 use crate::{
     env::{Environment, FunctionBody},
     error::{Error, Result},
     parser::Expression,
 };
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Value {
     Num(u64),
+    String(String),
     Bool(bool),
-    Nothing
+    Nothing,
 }
 
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Num(n) => write!(f, "{}", n),
+            Self::String(s) => write!(f, "{}", s),
             Self::Bool(b) => write!(f, "{}", b),
-            Self::Nothing => write!(f, "none")
+            Self::Nothing => write!(f, "none"),
         }?;
         Ok(())
     }

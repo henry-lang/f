@@ -7,6 +7,7 @@ use crate::{
 pub enum Token<'a> {
     Decl(&'a str, Span),
     Name(&'a str, Span),
+    String(&'a str, Span),
     Num(u64, Span), // Only natural number support for now
     Arrow(Span),
 }
@@ -14,7 +15,7 @@ pub enum Token<'a> {
 impl Token<'_> {
     pub fn span(&self) -> Span {
         match self {
-            Self::Decl(_, s) | Self::Name(_, s) | Self::Num(_, s) | Self::Arrow(s) => s.clone(),
+            Self::Decl(_, s) | Self::Name(_, s) | Self::String(_, s)  | Self::Num(_, s) | Self::Arrow(s) => s.clone(),
         }
     }
 
@@ -27,6 +28,7 @@ impl Token<'_> {
 pub enum TokenKind {
     Decl,
     Name,
+    String,
     Num,
     Arrow,
 }
@@ -36,6 +38,7 @@ impl From<&Token<'_>> for TokenKind {
         match token {
             Token::Decl(_, _) => Self::Decl,
             Token::Name(_, _) => Self::Name,
+            Token::String(_, _) => Self::String,
             Token::Num(_, _) => Self::Num,
             Token::Arrow(_) => Self::Arrow,
         }
@@ -50,7 +53,8 @@ impl std::fmt::Display for TokenKind {
             match self {
                 Self::Decl => "declaration",
                 Self::Name => "name",
-                Self::Num => "string",
+                Self::String => "string",
+                Self::Num => "num",
                 Self::Arrow => "<arrow>",
             }
         )
@@ -96,13 +100,53 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                 continue;
             }
 
+            '\"' => {
+                let mut literal = String::new(); // Temporary string to hold the parsed literal
+                let mut escaped = false;
+                while let Some((_, ch)) = chars.next() {
+                    if escaped {
+                        match ch {
+                            'n' => literal.push('\n'),
+                            't' => literal.push('\t'),
+                            '\"' => literal.push('\"'),
+                            '\\' => literal.push('\\'),
+                            _ => {
+                                return Err(Error::Spanned(
+                                    "invalid escape sequence".into(),
+                                    i..i + 2,
+                                ))
+                            } // Handle unexpected escape sequences
+                        }
+                        escaped = false;
+                    } else if ch == '\\' {
+                        escaped = true; // Next character is escaped
+                    } else if ch == '\"' {
+                        break; // End of string literal
+                    } else {
+                        literal.push(ch);
+                    }
+                }
+                if escaped {
+                    // Handle case where the last character is a backslash, which is invalid
+                    return Err(Error::Spanned(
+                        "unfinished escape sequence".into(),
+                        i..i + 1,
+                    ));
+                }
+
+                Token::String(
+                    &src[i + 1..i + 1 + literal.len()],
+                    i..i + 2 + literal.len(),
+                )
+            }
+
             _ => {
                 let mut end = i + 1;
 
                 while chars.next_if(|(_, next)| !next.is_whitespace()).is_some() {
                     end += 1;
                 }
-                
+
                 if c == '\\' {
                     Token::Decl(&src[i + 1..end], i + 1..end)
                 } else {

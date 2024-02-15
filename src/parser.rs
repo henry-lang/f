@@ -19,7 +19,10 @@ pub fn parse_file<'a>(tokens: &'a [Token], env: &mut Environment<'a>) -> Result<
 
     while let Some(token) = tokens.next() {
         let Token::Decl(name, _) = token else {
-            Err(Error::Spanned(format!("expected declaration found {}", token.kind()), token.span()))?
+            Err(Error::Spanned(
+                format!("expected declaration found {}", token.kind()),
+                token.span(),
+            ))?
         };
 
         let mut args = vec![];
@@ -52,33 +55,34 @@ pub fn parse_expr<'a>(
     args: &Vec<&str>,
     funcs: &HashMap<&str, Function>,
 ) -> Result<Expression<'a>> {
-        let expr = match tokens
-            .next()
-            .ok_or_else(|| Error::General("expected expression, found <eof>".into()))?
-        {
-            Token::Name(name, span) => {
-                if let Some(idx) = args.iter().position(|&a| a == *name) {
-                    Expression::Arg(idx)
-                } else if let Some(func) = funcs.get(name) {
-                    let mut app_args = Vec::with_capacity(func.args());
-                    for _ in 0..func.args() {
-                        app_args.push(parse_expr(tokens, args, funcs)?);
-                    }
-
-                    Expression::App(name, app_args)
-                } else {
-                    Err(Error::Spanned(
-                        format!("cannot find function or local {name}"),
-                        span.clone(),
-                    ))?
+    let expr = match tokens
+        .next()
+        .ok_or_else(|| Error::General("expected expression, found <eof>".into()))?
+    {
+        Token::Name(name, span) => {
+            if let Some(idx) = args.iter().position(|&a| a == *name) {
+                Expression::Arg(idx)
+            } else if let Some(func) = funcs.get(name) {
+                let mut app_args = Vec::with_capacity(func.args());
+                for _ in 0..func.args() {
+                    app_args.push(parse_expr(tokens, args, funcs)?);
                 }
-            }
 
-            Token::Num(num, _) => Expression::Literal(Value::Num(*num)),
-            token => Err(Error::Spanned(
-                format!("unexpected token {}", token.kind()),
-                token.span(),
-            ))?,
-        };
+                Expression::App(name, app_args)
+            } else {
+                Err(Error::Spanned(
+                    format!("cannot find function or local {name}"),
+                    span.clone(),
+                ))?
+            }
+        }
+
+        Token::Num(num, _) => Expression::Literal(Value::Num(*num)),
+        Token::String(str, _) => Expression::Literal(Value::String(str.to_string())),
+        token => Err(Error::Spanned(
+            format!("unexpected token {}", token.kind()),
+            token.span(),
+        ))?,
+    };
     Ok(expr)
 }

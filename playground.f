@@ -1,4 +1,3 @@
-# Conjuctions
 \do_both a b -> none
 
 \print_to_inner max n -> 
