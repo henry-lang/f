@@ -13,8 +13,7 @@ use std::env::args;
 use parser::{parse_expr, parse_file};
 use tokenizer::tokenize;
 
-use crate::error::Result;
-use crate::{env::Environment, interpreter::Value};
+use crate::{env::Environment, error::Result, interpreter::Value};
 
 pub fn repl() -> rustyline::Result<()> {
     let mut env = env::default_env();
@@ -46,12 +45,13 @@ fn main() -> core::result::Result<(), Box<dyn std::error::Error>> {
         repl()?;
     } else {
         let file = std::fs::read_to_string(&file_name)
-            .map_err(|_| Error::General(format!("could not load file {}", file_name))).unwrap_pretty("");
+            .map_err(|_| Error::General(format!("could not load file {}", file_name)))
+            .unwrap_pretty("");
 
         let tokens = tokenize(&file).unwrap_pretty(&file);
         let mut env = env::default_env();
         parse_file(&tokens, &mut env).unwrap_pretty(&file);
-        
+
         let main = env.get("main").unwrap_or_else(|| {
             Err(Error::General("no main function found in file".into())).unwrap_pretty(&file)
         });

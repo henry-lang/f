@@ -15,7 +15,11 @@ pub enum Token<'a> {
 impl Token<'_> {
     pub fn span(&self) -> Span {
         match self {
-            Self::Decl(_, s) | Self::Name(_, s) | Self::String(_, s)  | Self::Num(_, s) | Self::Arrow(s) => s.clone(),
+            Self::Decl(_, s)
+            | Self::Name(_, s)
+            | Self::String(_, s)
+            | Self::Num(_, s)
+            | Self::Arrow(s) => s.clone(),
         }
     }
 
@@ -115,7 +119,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                                 return Err(Error::Spanned(
                                     "invalid escape sequence".into(),
                                     i..i + 2,
-                                ))
+                                ));
                             } // Handle unexpected escape sequences
                         }
                         escaped = false;
@@ -135,10 +139,7 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>> {
                     ));
                 }
                 let len = literal.len();
-                Token::String(
-                    literal,
-                    i..i + 2 + len,
-                )
+                Token::String(literal, i..i + 2 + len)
             }
 
             _ => {

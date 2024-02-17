@@ -30,7 +30,7 @@ pub enum ValueKind {
     Num,
     String,
     Bool,
-    Nothing
+    Nothing,
 }
 
 impl From<&Value> for ValueKind {
@@ -39,7 +39,7 @@ impl From<&Value> for ValueKind {
             Value::Num(_) => Self::Num,
             Value::String(_) => Self::String,
             Value::Bool(_) => Self::Bool,
-            Value::Nothing => Self::Nothing
+            Value::Nothing => Self::Nothing,
         }
     }
 }
