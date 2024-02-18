@@ -1,20 +1,19 @@
 use crate::{
-    env::{Environment, Function},
+    env::{Environment, Function, Symbol},
     error::{Error, Result},
     interpreter::Value,
     tokenizer::{Token, TokenKind},
 };
-use std::collections::HashMap;
 
 #[derive(Debug)]
-pub enum Expression<'a> {
-    App(&'a str, Vec<Expression<'a>>), // Maybe use arena allocator for better cache locality
+pub enum Expression {
+    App(Symbol, Vec<Expression>), // Maybe use arena allocator for better cache locality
     Arg(usize),
     Literal(Value),
     Temp,
 }
 
-pub fn parse_file<'a>(tokens: &'a [Token], env: &mut Environment<'a>) -> Result<()> {
+pub fn parse_file<'a>(tokens: &[Token], env: &mut Environment) -> Result<()> {
     let mut tokens = tokens.iter().peekable();
 
     while let Some(token) = tokens.next() {
@@ -41,9 +40,9 @@ pub fn parse_file<'a>(tokens: &'a [Token], env: &mut Environment<'a>) -> Result<
             ));
         } else {
             // TODO: make this better
-            env.insert(name, Function::new(args.len(), Expression::Temp));
+            env.insert_function(name, Function::new(args.len(), Expression::Temp));
             let expr = parse_expr(&mut tokens, &args, env)?;
-            env.insert(name, Function::new(args.len(), expr));
+            env.insert_function(name, Function::new(args.len(), expr));
         }
     }
 
@@ -53,8 +52,8 @@ pub fn parse_file<'a>(tokens: &'a [Token], env: &mut Environment<'a>) -> Result<
 pub fn parse_expr<'a>(
     tokens: &mut impl Iterator<Item = &'a Token<'a>>,
     args: &Vec<&str>,
-    funcs: &HashMap<&str, Function>,
-) -> Result<Expression<'a>> {
+    env: &Environment,
+) -> Result<Expression> {
     let expr = match tokens
         .next()
         .ok_or_else(|| Error::General("expected expression, found <eof>".into()))?
@@ -62,13 +61,13 @@ pub fn parse_expr<'a>(
         Token::Name(name, span) => {
             if let Some(idx) = args.iter().position(|&a| a == *name) {
                 Expression::Arg(idx)
-            } else if let Some(func) = funcs.get(name) {
+            } else if let Some((symbol, func)) = env.get_entry(name) {
                 let mut app_args = Vec::with_capacity(func.args());
                 for _ in 0..func.args() {
-                    app_args.push(parse_expr(tokens, args, funcs)?);
+                    app_args.push(parse_expr(tokens, args, env)?);
                 }
 
-                Expression::App(name, app_args)
+                Expression::App(symbol, app_args)
             } else {
                 Err(Error::Spanned(
                     format!("cannot find function or local {name}"),

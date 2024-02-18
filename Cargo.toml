@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 ansi_term = "0.12.1"
 rustyline = { version = "10.1.1", default-features = false }
+lasso = "0.7.2"
 
 [profile.release]
 # lto = "fat"

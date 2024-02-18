@@ -10,6 +10,7 @@ pub enum Value {
     Num(u64),
     String(String),
     Bool(bool),
+    List(Vec<Value>),
     Nothing,
 }
 
@@ -20,8 +21,19 @@ impl fmt::Display for Value {
             Self::String(s) => write!(f, "{}", s),
             Self::Bool(b) => write!(f, "{}", b),
             Self::Nothing => write!(f, "none"),
-        }?;
-        Ok(())
+            Self::List(l) => {
+                write!(f, "[")?;
+                if let Some((tail, head)) = l.split_last() {
+                    for val in head {
+                        write!(f, "{}, ", val)?;
+                    }
+                    write!(f, "{}", tail)?;
+                } else {
+                    return write!(f, "]");
+                }
+                write!(f, "]")
+            }
+        }
     }
 }
 
@@ -31,6 +43,7 @@ pub enum ValueKind {
     String,
     Bool,
     Nothing,
+    List,
 }
 
 impl From<&Value> for ValueKind {
@@ -40,6 +53,7 @@ impl From<&Value> for ValueKind {
             Value::String(_) => Self::String,
             Value::Bool(_) => Self::Bool,
             Value::Nothing => Self::Nothing,
+            Value::List(_) => Self::List,
         }
     }
 }
@@ -54,6 +68,7 @@ impl std::fmt::Display for ValueKind {
                 Self::String => "string",
                 Self::Bool => "bool",
                 Self::Nothing => "none",
+                Self::List => "list",
             }
         )
     }
@@ -61,8 +76,8 @@ impl std::fmt::Display for ValueKind {
 
 fn eval_(expr: &Expression, env: &Environment, args: &Vec<Value>) -> Result<Value> {
     match expr {
-        Expression::App(name, params) => {
-            let func = env.get(name).unwrap();
+        Expression::App(symbol, params) => {
+            let func = env.get_function(*symbol).unwrap();
 
             let eager_eval = || {
                 params
@@ -72,7 +87,7 @@ fn eval_(expr: &Expression, env: &Environment, args: &Vec<Value>) -> Result<Valu
             };
 
             match func.body() {
-                FunctionBody::Normal(expr) => eval_(expr, env, &eager_eval()?),
+                FunctionBody::Normal(expr) => eval_(&expr, env, &eager_eval()?),
                 FunctionBody::System(func) => func(&eager_eval()?),
                 FunctionBody::LazySystem(func) => func(params, eval_, env, args),
             }
